@@ -779,7 +779,7 @@ public:
 		while ( i-- > 0 )
 		{
 			++m_nActive;
-			threads.emplace_back( DoExecute, this );
+			threads.emplace_back( DoExecute, this, i );
 		}
 
 		constexpr const std::chrono::milliseconds sleepTime{ 250 };
@@ -805,12 +805,22 @@ private:
 	std::atomic<int>			m_nActive;
 	TMutexType					m_Mutex;
 
-	static void DoExecute( CWorkerAccumState* pThis )
+	static void DoExecute( CWorkerAccumState* pThis, uint32_t workerId )
 	{
+		SetThreadName( workerId );
+
 		while ( pThis->OnProcess() )
 			continue;
 
 		--pThis->m_nActive;
+	}
+
+	static void SetThreadName( uint32_t workerId )
+	{
+		wchar_t workerName[16];
+		swprintf_s(workerName, L"Worker #%u", workerId);
+
+		SetThreadDescription( GetCurrentThread(), workerName );
 	}
 
 	std::vector<uint64_t>	m_arrSubProcessInfos;
