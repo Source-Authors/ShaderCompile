@@ -8,6 +8,12 @@ project(ShaderCompile CXX)
 
 option(RE2_BUILD_TESTING "" OFF)
 
+# Abseil install required by re2.
+set(ABSL_ENABLE_INSTALL ON)
+# Use static MSVC runtime for Abseil to match others.
+set(ABSL_MSVC_STATIC_RUNTIME ON)
+
+add_subdirectory(shared/abseil-cpp)
 add_subdirectory(shared/re2)
 add_subdirectory(shared/gsl)
 
@@ -30,5 +36,3 @@ include_directories(ShaderCompile/include shared/re2)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
 set_property(TARGET ShaderCompile PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set_property(TARGET re2 PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-target_compile_definitions(ShaderCompile PRIVATE _ITERATOR_DEBUG_LEVEL=0)
-target_compile_definitions(re2 PRIVATE _ITERATOR_DEBUG_LEVEL=0)

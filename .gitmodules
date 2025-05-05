@@ -4,3 +4,6 @@
 [submodule "shared/re2"]
 	path = shared/re2
 	url = https://github.com/google/re2.git
+[submodule "shared/abseil-cpp"]
+	path = shared/abseil-cpp
+	url = git@github.com:abseil/abseil-cpp.git
