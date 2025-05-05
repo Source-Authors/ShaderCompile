@@ -1442,6 +1442,12 @@ static constexpr const char* const validTypes[] =
 
 static constexpr const char* const validModels[] =
 {
+#if defined(SC_BUILD_PS1_X_COMPILER)
+    "11",
+    "12",
+    "13",
+    "14",
+#endif  // SC_BUILD_PS1_X_COMPILER
 	"20b", "30", "40", "41", "50", "51"
 };
 

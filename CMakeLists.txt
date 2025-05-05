@@ -6,6 +6,7 @@ endif()
 
 project(ShaderCompile CXX)
 
+option(SC_BUILD_PS1_X_COMPILER "Allow to compile Pixel Shaders 1.x (by DirectX 9 shader compiler)." ON)
 option(RE2_BUILD_TESTING "" OFF)
 
 # Abseil install required by re2.
@@ -30,9 +31,36 @@ set(SRC
     )
 
 add_executable(ShaderCompile ${SRC})
+
+set(INCLUDE_DIRS
+    ShaderCompile/include
+    shared/re2
+    )
+
+if (SC_BUILD_PS1_X_COMPILER)
+    target_compile_definitions(ShaderCompile PRIVATE SC_BUILD_PS1_X_COMPILER=1)
+    list(APPEND INCLUDE_DIRS shared/dx9sdk/include)
+    target_link_directories(ShaderCompile PRIVATE shared/dx9sdk/lib/x64)
+
+    add_custom_command(
+        TARGET ShaderCompile POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${CMAKE_SOURCE_DIR}/shared/dx9sdk/bin/x64/D3DCompiler_43.dll $<TARGET_FILE_DIR:ShaderCompile>
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:ShaderCompile>
+        COMMENT "Copy 'shared/dx9sdk/bin/x64/D3DCompiler_43.dll' to '$<TARGET_FILE_DIR:ShaderCompile>' output directory."
+    )
+
+    add_custom_command(
+        TARGET ShaderCompile POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${CMAKE_SOURCE_DIR}/shared/dx9sdk/bin/x64/D3DX9_43.dll $<TARGET_FILE_DIR:ShaderCompile>
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:ShaderCompile>
+        COMMENT "Copy 'shared/dx9sdk/bin/x64/D3DX9_43.dll' to '$<TARGET_FILE_DIR:ShaderCompile>' output directory."
+    )
+endif()
+
+target_include_directories(ShaderCompile PRIVATE ${INCLUDE_DIRS})
 target_link_libraries(ShaderCompile PRIVATE re2::re2 Microsoft.GSL::GSL)
-include_directories(ShaderCompile/include shared/re2)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
 set_property(TARGET ShaderCompile PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set_property(TARGET re2 PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
