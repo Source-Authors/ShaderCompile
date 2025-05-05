@@ -18,7 +18,8 @@
 #include "basetypes.h"
 #include "cfgprocessor.h"
 #include "cmdsink.h"
-#include "d3dcompiler.h"
+#include <d3dcompiler.h>
+#include <comdef.h>
 #include "gsl/narrow"
 #include <malloc.h>
 #include <vector>
@@ -83,6 +84,54 @@ static struct DxIncludeImpl final : public ID3DInclude
 	virtual ~DxIncludeImpl() = default;
 } s_incDxImpl;
 
+namespace
+{
+
+// dimhotepus: Allow to report non DirectX compiler errors in blobs.
+class ErrorD3DBlob final : public ID3DBlob
+{
+public:
+	explicit ErrorD3DBlob(std::string &&error) noexcept
+	    : m_error{std::move(error)}, m_ref_counter{1} {}
+	~ErrorD3DBlob() noexcept = default;
+
+	// IUnknown
+	STDMETHODIMP QueryInterface(REFIID iid, LPVOID *ppv) override
+	{
+		if (!ppv) return E_POINTER;
+	
+		if (IsEqualGUID(iid, __uuidof(ID3DBlob))) {
+			auto *blob = static_cast<ID3DBlob *>(this);
+			blob->AddRef();
+			*ppv = blob;
+			return S_OK;
+		}
+	
+		return E_NOINTERFACE;
+	}
+	STDMETHODIMP_(ULONG) AddRef() override
+	{
+		return m_ref_counter.fetch_add(1, std::memory_order::memory_order_relaxed);
+	}
+	STDMETHODIMP_(ULONG) Release() override
+	{
+		const ULONG rc =
+		    m_ref_counter.fetch_sub(1, std::memory_order::memory_order_acq_rel);
+		if (rc == 0) delete this;
+		return rc;
+	}
+
+	// ID3DBlob
+	STDMETHODIMP_(LPVOID) GetBufferPointer() override { return m_error.data(); }
+	STDMETHODIMP_(SIZE_T) GetBufferSize() override { return m_error.length(); }
+
+private:
+	std::string m_error;
+	std::atomic_ulong m_ref_counter;
+};
+
+}
+
 class CResponse final : public CmdSink::IResponse
 {
 public:
@@ -91,6 +140,12 @@ public:
 		, m_pListing( pListing )
 		, m_hr( hr )
 	{
+		if (!pListing && FAILED(hr))
+		{
+			auto err = _com_error{hr};
+			auto msg = std::string{err.ErrorMessage()};
+			m_pListing = new ErrorD3DBlob{std::move(msg)};
+		}
 	}
 
 	~CResponse() override
