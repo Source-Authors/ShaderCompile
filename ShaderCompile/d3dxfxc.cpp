@@ -194,7 +194,7 @@ private:
 	ID3DXBuffer* m_buffer;
 };
 
-DWORD GetD3dxFlagsFromD3dOnes(UINT d3dFlags1, UINT d3dFlags2) noexcept
+DWORD GetD3dxFlagsFromD3dOnes(UINT d3dFlags1) noexcept
 {
 	DWORD d3dx_flags{0};
 	
@@ -349,7 +349,7 @@ void Compiler::ExecuteCommand( const CfgProcessor::ComboBuildCommand& pCommand, 
 			hr = D3DXCompileShader(static_cast<const char*>(lpcvData), numBytes,
 				reinterpret_cast<const D3DXMACRO*>(macros.data()),
 				d3dx_include, pCommand.entryPoint.data(), target.data(),
-				GetD3dxFlagsFromD3dOnes(flags, 0),
+				GetD3dxFlagsFromD3dOnes(flags),
 				&d3dx_shader, &d3dx_errors, nullptr);
 			if (SUCCEEDED(hr))
 			{

@@ -22,6 +22,18 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# https://github.com/izenecloud/cmake/blob/master/SetCompilerWarningAll.cmake
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # Use the highest warning level for Visual Studio.
+    set(CMAKE_CXX_WARNING_LEVEL 4)
+
+    if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+        string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    else(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+    endif(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+endif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+
 set(SRC
     ShaderCompile/cfgprocessor.cpp
     ShaderCompile/d3dxfxc.cpp
@@ -37,7 +49,7 @@ set(INCLUDE_DIRS
     shared/re2
     )
 
-if (SC_BUILD_PS1_X_COMPILER)
+if(SC_BUILD_PS1_X_COMPILER)
     target_compile_definitions(ShaderCompile PRIVATE SC_BUILD_PS1_X_COMPILER=1)
     list(APPEND INCLUDE_DIRS shared/dx9sdk/include)
     target_link_directories(ShaderCompile PRIVATE shared/dx9sdk/lib/x64)
@@ -55,7 +67,7 @@ if (SC_BUILD_PS1_X_COMPILER)
         WORKING_DIRECTORY $<TARGET_FILE_DIR:ShaderCompile>
         COMMENT "Copy 'shared/dx9sdk/bin/x64/D3DX9_43.dll' to '$<TARGET_FILE_DIR:ShaderCompile>' output directory."
     )
-endif()
+endif(SC_BUILD_PS1_X_COMPILER)
 
 target_include_directories(ShaderCompile PRIVATE ${INCLUDE_DIRS})
 target_link_libraries(ShaderCompile PRIVATE re2::re2 Microsoft.GSL::GSL)

@@ -150,7 +150,6 @@ bool Parser::ParseFile( const fs::path& name, const std::string& root, const std
 	using re2::RE2;
 	conf.centroid_mask = 0U;
 	const auto nameS = name.string();
-	const auto f = nameS.find_last_of( '.' );
 	char regMatch[] = { R"reg(\[ s(\d+\w?)\])reg" };
 	char regNotMatch[] = { R"reg(\[[    ]s\d+\w?\])reg" };
 	std::string mainCat = " S_MAIN"s;
@@ -159,7 +158,7 @@ bool Parser::ParseFile( const fs::path& name, const std::string& root, const std
 	for ( int i = 0, j = 0; i < 5; ++i )
 		if ( validL[i] != target[0] )
 			regNotMatch[3 + j++] = validL[i];
-	mainCat[0] = toupper( target[0] );
+	mainCat[0] = static_cast<char>(toupper( target[0] ));
 	const RE2 shouldMatch( regMatch );
 	const RE2 shouldNotMatch( regNotMatch );
 	conf.main = "main"s;

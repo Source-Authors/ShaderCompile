@@ -964,7 +964,7 @@ void CWorkerAccumState<TMutexType>::TryToPackageData( uint64_t iCommandNumber )
 			// Packed buffer
 			uint8_t* pCodeBuffer;
 			{
-				std::lock_guard guard{ Threading::g_mtxGlobal };
+				std::lock_guard guard_static_combo{ Threading::g_mtxGlobal };
 				pCodeBuffer = StaticComboFromDictAdd( pInfoBegin->m_szName, nComboBegin )->AllocPackedCodeBlock( nPackedLength );
 			}
 
