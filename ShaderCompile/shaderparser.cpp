@@ -318,12 +318,12 @@ void Parser::WriteInclude( const fs::path& fileName, const std::string& name, co
 
 		file << "#pragma once\n" R"(#include "shaderlib/cshader.h")" "\n"sv;
 
-		writeVars( "Static"sv, static_c, "IShaderShadow* pShaderShadow, IMaterialVar** params"sv,
+		writeVars( "Static"sv, static_c, ""sv,
 			std::accumulate( dynamic_c.begin(), dynamic_c.end(), 1U, []( uint32_t a, const Combo& b ) { return a * ( b.maxVal - b.minVal + 1 ); } ), false );
 
 		file << "\n"sv;
 
-		writeVars( "Dynamic"sv, dynamic_c, "IShaderDynamicAPI* pShaderAPI"sv, 1U, true );
+		writeVars( "Dynamic"sv, dynamic_c, ""sv, 1U, true );
 
 		if ( writeSCI )
 		{
