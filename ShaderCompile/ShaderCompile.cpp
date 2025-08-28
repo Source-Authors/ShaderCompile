@@ -48,6 +48,7 @@
 #include "termcolors.hpp"
 #include "strmanip.hpp"
 #include "shaderparser.h"
+#include "scopednewhandler.hpp"
 
 extern "C" {
 #define _7ZIP_ST
@@ -1461,8 +1462,19 @@ static constexpr const char* const validModels[] =
 	"20b", "30", "40", "41", "50", "51"
 };
 
+void OnNewOrMallocFailure() noexcept
+{
+	std::cerr << clr::red << clr::bold
+			  << "ERROR: Failed to allocate memory. Please close other processes and retry."
+			  << clr::reset
+			  << std::endl;
+	exit( ENOMEM );
+}
+
 int main( int argc, const char* argv[] )
 {
+	const ScopedNewHandler scopedNewHandler{ OnNewOrMallocFailure };
+
 	{
 		const HANDLE console = GetStdHandle( STD_OUTPUT_HANDLE );
 		DWORD mode;

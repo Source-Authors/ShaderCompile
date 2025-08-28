@@ -380,7 +380,10 @@ void CUtlMemory<T, I>::ConvertToGrowableMemory( int nGrowSize )
 	{
 		const int nNumBytes = m_nAllocationCount * sizeof( T );
 		T* pMemory          = static_cast<T*>( malloc( nNumBytes ) );
-		memcpy( pMemory, m_pMemory, nNumBytes );
+		if ( pMemory )
+		{
+			memcpy( pMemory, m_pMemory, nNumBytes );
+		}
 		m_pMemory = pMemory;
 	}
 	else
