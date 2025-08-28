@@ -259,7 +259,7 @@ class CompilerMsgInfo
 public:
 	CompilerMsgInfo() : m_numTimesReported( 0 ) {}
 
-	void SetMsgReportedCommand( const std::string& szCommand )
+	void SetMsgReportedCommand( std::string_view szCommand )
 	{
 		if ( !m_numTimesReported )
 			m_sFirstCommand = szCommand;
@@ -333,28 +333,34 @@ static void ErrMsgDispatchMsgLine( const char* szCommand, const char* szMsgLine,
 {
 	std::lock_guard guard{ Threading::g_mtxMsgReport };
 	auto& msg = g_CompilerMsg[szName];
-	char* dupMsg = _strdup( szMsgLine );
-	char *start = dupMsg, *end = dupMsg + strlen( dupMsg );
+
+	const size_t msgLineLen = strlen( szMsgLine );
+	char* dupMsg = new char[ msgLineLen + 1 ];
+	strcpy_s( dupMsg, msgLineLen + 1, szMsgLine );
+
+	char *start = dupMsg, *end = dupMsg + msgLineLen;
 	char* start2 = start;
+	const size_t szCommandLen = strlen( szCommand );
+	constexpr char warningXTitleStart[]{"warning X"};
 
 	// Now store the message with the command it was generated from
 	for ( ; start2 < end && ( start = strchr( start2, '\n' ) ); start2 = start + 1 )
 	{
-		*start = 0;
-		if ( strstr( start2, "warning X" ) )
-			msg.warning[start2].SetMsgReportedCommand( szCommand );
+		*start = '\0';
+		if ( strstr( start2, warningXTitleStart ) )
+			msg.warning[start2].SetMsgReportedCommand( {szCommand, szCommandLen} );
 		else
-			msg.error[start2].SetMsgReportedCommand( szCommand );
+			msg.error[start2].SetMsgReportedCommand( {szCommand, szCommandLen} );
 	}
 
 	if ( start2 < end )
 	{
-		if ( strstr( start2, "warning X" ) )
-			msg.warning[start2].SetMsgReportedCommand( szCommand );
+		if ( strstr( start2, warningXTitleStart ) )
+			msg.warning[start2].SetMsgReportedCommand( {szCommand, szCommandLen} );
 		else
-			msg.error[start2].SetMsgReportedCommand( szCommand );
+			msg.error[start2].SetMsgReportedCommand( {szCommand, szCommandLen} );
 	}
-	free( dupMsg );
+	delete[] dupMsg;
 }
 
 static void ShaderHadErrorDispatchInt( std::string_view szShader )
