@@ -17,11 +17,12 @@
 
 #include <windows.h>
 
-#include "DbgHelp.h"
-#include "d3dcompiler.h"
+#include <DbgHelp.h>
+#include <d3dcompiler.h>
 #include <atomic>
 #include <chrono>
 #include <cstdlib>
+#include <memory>
 #include <future>
 #include <filesystem>
 #include <regex>
@@ -768,7 +769,7 @@ public:
 	void RangeFinished();
 
 	void ExecuteCompileCommand( CfgProcessor::ComboHandle hCombo );
-	void HandleCommandResponse( CfgProcessor::ComboHandle hCombo, CmdSink::IResponse* pResponse );
+	void HandleCommandResponse( CfgProcessor::ComboHandle hCombo, std::unique_ptr<CmdSink::IResponse> &&pResponse );
 
 	void Run( uint32_t i )
 	{
@@ -860,8 +861,6 @@ void CWorkerAccumState<TMutexType>::RangeFinished()
 template <typename TMutexType>
 void CWorkerAccumState<TMutexType>::ExecuteCompileCommand( CfgProcessor::ComboHandle hCombo )
 {
-	CmdSink::IResponse* pResponse = nullptr;
-
 	if constexpr ( std::is_same_v<TMutexType, Threading::null_mutex> )
 	{
 		if ( g_bVerbose2 )
@@ -872,24 +871,22 @@ void CWorkerAccumState<TMutexType>::ExecuteCompileCommand( CfgProcessor::ComboHa
 		}
 	}
 
-	Compiler::ExecuteCommand( Combo_BuildCommand( hCombo ), pResponse, m_iFlags );
+	std::unique_ptr<CmdSink::IResponse> response = Compiler::ExecuteCommand( Combo_BuildCommand( hCombo ), m_iFlags );
 
-	HandleCommandResponse( hCombo, pResponse );
+	HandleCommandResponse( hCombo, std::move( response ) );
 }
 
 static void StopCommandRange();
 
 template <typename TMutexType>
-void CWorkerAccumState<TMutexType>::HandleCommandResponse( CfgProcessor::ComboHandle hCombo, CmdSink::IResponse* pResponse )
+void CWorkerAccumState<TMutexType>::HandleCommandResponse( CfgProcessor::ComboHandle hCombo, std::unique_ptr<CmdSink::IResponse> &&pResponse )
 {
-	Assert( pResponse );
-
 	// Command info
 	const CfgProcessor::CfgEntryInfo* pEntryInfo = Combo_GetEntryInfo( hCombo );
 	const uint64_t iComboIndex                   = Combo_GetComboNum( hCombo );
 	const uint64_t iCommandNumber                = Combo_GetCommandNum( hCombo );
 
-	if ( pResponse->Succeeded() )
+	if ( pResponse && pResponse->Succeeded() )
 	{
 		std::lock_guard guard{ Threading::g_mtxGlobal };
 		const uint64_t nStComboIdx = iComboIndex / pEntryInfo->m_numDynamicCombos;
@@ -903,7 +900,7 @@ void CWorkerAccumState<TMutexType>::HandleCommandResponse( CfgProcessor::ComboHa
 	}
 
 	// Process listing even if the shader succeeds for warnings
-	const char* szListing = pResponse->GetListing();
+	const char* szListing = pResponse ? pResponse->GetListing() : "Out of memory when allocating compilation result.";
 	if ( szListing || !pResponse->Succeeded() )
 	{
 		char chUnreportedListing[0xFF];
@@ -917,11 +914,9 @@ void CWorkerAccumState<TMutexType>::HandleCommandResponse( CfgProcessor::ComboHa
 		Combo_FormatCommandHumanReadable( hCombo, chBuffer );
 
 		ErrMsgDispatchMsgLine( chBuffer, szListing, pEntryInfo->m_szName );
-		if ( !pResponse->Succeeded() && g_bFastFail )
+		if ( ( !pResponse || !pResponse->Succeeded() ) && g_bFastFail )
 			StopCommandRange();
 	}
-
-	pResponse->Release();
 
 	// Maybe zip things up
 	TryToPackageData( iCommandNumber );

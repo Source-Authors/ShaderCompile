@@ -359,7 +359,7 @@ bool IsTargetEqual(std::string_view target, std::string_view expected) noexcept
 #endif  // SC_BUILD_PS1_X_COMPILER
 
 
-void Compiler::ExecuteCommand( const CfgProcessor::ComboBuildCommand& pCommand, CmdSink::IResponse* &pResponse, unsigned int flags )
+std::unique_ptr<CmdSink::IResponse> Compiler::ExecuteCommand( const CfgProcessor::ComboBuildCommand& pCommand, unsigned int flags )
 {
 	// Macros to be defined for D3DX
 	std::vector<D3D_SHADER_MACRO> macros;
@@ -401,15 +401,15 @@ void Compiler::ExecuteCommand( const CfgProcessor::ComboBuildCommand& pCommand, 
 			
 			ID3DXBuffer *d3dx_shader{nullptr}, *d3dx_errors{nullptr};
 			
-			hr = D3DXCompileShader(static_cast<const char*>(lpcvData), numBytes,
+			hr = D3DXCompileShader( static_cast<const char*>(lpcvData), numBytes,
 				reinterpret_cast<const D3DXMACRO*>(macros.data()),
 				d3dx_include, pCommand.entryPoint.data(), target.data(),
 				GetD3dxFlagsFromD3dOnes(flags),
-				&d3dx_shader, &d3dx_errors, nullptr);
-			if (SUCCEEDED(hr))
+				&d3dx_shader, &d3dx_errors, nullptr );
+			if ( SUCCEEDED(hr) )
 			{
-				pShader = new D3DBlob{d3dx_shader};
-				pErrorMessages = new D3DBlob{d3dx_errors};
+				pShader = new D3DBlob{ d3dx_shader };
+				pErrorMessages = new D3DBlob{ d3dx_errors };
 			}
 		}
 #endif  // SC_BUILD_PS1_X_COMPILER
@@ -418,5 +418,5 @@ void Compiler::ExecuteCommand( const CfgProcessor::ComboBuildCommand& pCommand, 
 		s_incDxImpl.Close( lpcvData );
 	}
 
-	pResponse = new( std::nothrow ) CResponse( pShader, pErrorMessages, hr );
+	return std::unique_ptr<CmdSink::IResponse>{ new( std::nothrow ) CResponse( pShader, pErrorMessages, hr ) };
 }

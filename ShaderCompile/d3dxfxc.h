@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "basetypes.h"
 #include "cmdsink.h"
 
@@ -50,5 +52,5 @@ namespace CfgProcessor
 
 namespace Compiler
 {
-	void ExecuteCommand( const CfgProcessor::ComboBuildCommand& pCommand, CmdSink::IResponse* &ppResponse, unsigned int flags );
+	std::unique_ptr<CmdSink::IResponse> ExecuteCommand( const CfgProcessor::ComboBuildCommand& pCommand, unsigned int flags );
 }; // namespace InterceptFxc

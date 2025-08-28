@@ -22,10 +22,8 @@ Interface to give back command execution results.
 */
 class IResponse
 {
-protected:
-	virtual ~IResponse() = default;
 public:
-	void Release() noexcept { delete this; }
+	virtual ~IResponse() = default;
 
 	// Returns whether the command succeeded
 	virtual bool Succeeded() const = 0;
