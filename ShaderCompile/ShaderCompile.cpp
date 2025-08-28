@@ -1353,7 +1353,7 @@ static void PrintCompileErrors( bool skipWarnings )
 			totalWarnings += msg.second.warning.size();
 			totalErrors += msg.second.error.size();
 		}
-		std::cout << clr::escaped( "\033[2K"sv ) << clr::yellow << "WARNINGS"sv << clr::reset << "/"sv << clr::red << "ERRORS "sv << clr::reset << totalWarnings << "/"sv << totalErrors << std::endl;
+		std::cerr << clr::escaped( "\033[2K"sv ) << clr::yellow << "WARNINGS"sv << clr::reset << "/"sv << clr::red << "ERRORS "sv << clr::reset << totalWarnings << "/"sv << totalErrors << '\n';
 
 		const auto& trim = []( std::string s ) -> std::string
 		{
@@ -1372,7 +1372,7 @@ static void PrintCompileErrors( bool skipWarnings )
 			if ( !skipWarnings )
 			{
 				if ( const size_t warnings = msg.warning.size() )
-					std::cout << clr::escaped( "\033[2K"sv ) << shaderName << " "sv << clr::yellow << warnings << " WARNING(S):"sv << clr::reset << std::endl;
+					std::cerr << clr::escaped( "\033[2K"sv ) << shaderName << " "sv << clr::yellow << warnings << " WARNING(S):"sv << clr::reset << '\n';
 
 				for ( const auto& warn : msg.warning )
 				{
@@ -1383,12 +1383,12 @@ static void PrintCompileErrors( bool skipWarnings )
 					std::string m = trim( szMsg );
 					if ( size_t find = m.find( searchPat ); find != std::string::npos && find >= cwdLen )
 						m = m.replace( find - cwdLen, cwdLen, "" );
-					std::cout << clr::escaped( "\033[2K"sv ) << m << "\nReported "sv << clr::green << numReported << clr::reset << " time(s)"sv << std::endl;
+					std::cerr << clr::escaped( "\033[2K"sv ) << m << "\nReported "sv << clr::green << numReported << clr::reset << " time(s)"sv << '\n';
 				}
 			}
 
 			if ( const size_t errors = msg.error.size() )
-				std::cout << clr::escaped( "\033[2K"sv ) << shaderName << " "sv << clr::red << errors << " ERROR(S):"sv << clr::reset << std::endl;
+				std::cerr << clr::escaped( "\033[2K"sv ) << shaderName << " "sv << clr::red << errors << " ERROR(S):"sv << clr::reset << '\n';
 
 			// Compiler spew
 			for ( const auto& err : msg.error )
@@ -1401,16 +1401,16 @@ static void PrintCompileErrors( bool skipWarnings )
 				std::string m = trim( szMsg );
 				if ( size_t find = m.find( searchPat ); find != std::string::npos && find >= cwdLen )
 					m = m.replace( find - cwdLen, cwdLen, "" );
-				std::cout << clr::escaped( "\033[2K"sv ) << m << "\nReported "sv << clr::green << numReported << clr::reset << " time(s), example command: "sv << std::endl;
+				std::cerr << clr::escaped( "\033[2K"sv ) << m << "\nReported "sv << clr::green << numReported << clr::reset << " time(s), example command: "sv << '\n';
 
-				std::cout << clr::escaped( "\033[2K"sv ) << "    "sv << clr::green << cmd << clr::reset << std::endl;
+				std::cerr << clr::escaped( "\033[2K"sv ) << "    "sv << clr::green << cmd << clr::reset << '\n';
 			}
 		}
 	}
 
 	// Failed shaders summary
 	for ( const auto& failed : g_ShaderHadError )
-		std::cout << clr::escaped( "\033[2K"sv ) << clr::pinkish << "FAILED: "sv << clr::red << failed << clr::reset << std::endl;
+		std::cerr << clr::escaped( "\033[2K"sv ) << clr::pinkish << "FAILED: "sv << clr::red << failed << clr::reset << '\n';
 }
 
 static bool s_write = true;
