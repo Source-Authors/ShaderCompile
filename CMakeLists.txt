@@ -9,6 +9,10 @@ project(ShaderCompile CXX)
 option(SC_BUILD_PS1_X_COMPILER "Allow to compile Pixel Shaders 1.x (by DirectX 9 shader compiler)." ON)
 option(RE2_BUILD_TESTING "" OFF)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Abseil install required by re2.
 set(ABSL_ENABLE_INSTALL ON)
 # Use static MSVC runtime for Abseil to match others.
@@ -17,10 +21,6 @@ set(ABSL_MSVC_STATIC_RUNTIME ON)
 add_subdirectory(shared/abseil-cpp)
 add_subdirectory(shared/re2)
 add_subdirectory(shared/gsl)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # https://github.com/izenecloud/cmake/blob/master/SetCompilerWarningAll.cmake
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
